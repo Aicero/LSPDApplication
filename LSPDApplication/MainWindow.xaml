@@ -7,9 +7,11 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
         Title="LSPD Application" MinHeight="600" MinWidth="1000" Height="600" Width="1000" WindowStartupLocation="CenterScreen"
+        BorderThickness="1" GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="CanResizeWithGrip" WindowTransitionsEnabled="False"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
@@ -17,16 +19,28 @@
 
         <StackPanel Orientation="Horizontal" Grid.Row="0">
             <Button Content="Choose a folder" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{DynamicResource SquareButtonStyle}" Command="{Binding SearchForHTMLFilesCommand}" />
-            <TextBox x:Name="TextBox" Text="{Binding labelkurwa}" Margin="10" VerticalAlignment="Center" Width="580" IsEnabled="False" />
+            <TextBox x:Name="TextBox" Text="{Binding Path=sourceOfHTMLFiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10" VerticalAlignment="Center" Width="580" IsEnabled="False" />
         </StackPanel>
 
         <Button Content="Export" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ExportCommand}"/>
 
-        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="1" Margin="10,20,10,0" AutoGenerateColumns="True" Style="{StaticResource AzureDataGrid}">
+        <StackPanel Orientation="Horizontal" Grid.Row="1">
+            <Label Content="Filter from:" FontSize="17" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <DatePicker Text="Data od" FontSize="17" VerticalAlignment="Center" Width="180" Margin="10,0,0,0"/>
+            <Label Content="Filter to:" FontSize="17" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <DatePicker Text="Data do" FontSize="17" VerticalAlignment="Center" Width="180" Margin="10,0,20,0"/>
+            <Button Content="process data" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding FilterDataCommand}"/>
+        </StackPanel>
+        <Button Content="view more info" Grid.Row="1" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ShowMoreInfoCommand}"/>
+        
+        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="2" Margin="10,20,10,0" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" Style="{StaticResource AzureDataGrid}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Nick" Binding="{Binding workerNick}"/>
                 <DataGridTextColumn Header="Rank" Binding="{Binding workerRank}"/>
                 <DataGridTextColumn Header="Payday" Binding="{Binding workerPayday}"/>
+                <DataGridTextColumn Header="Skin" Binding="{Binding workerSkin}"/>
+                <DataGridTextColumn Header="Duty time" Binding="{Binding workerDutyTime}"/>
+                <DataGridTextColumn Header="Happy hours" Binding="{Binding workerHappyHours}"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

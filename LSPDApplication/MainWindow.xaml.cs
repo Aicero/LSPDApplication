@@ -26,7 +26,6 @@ namespace LSPDApplication
         public MainWindow()
         {
             InitializeComponent();
-            this.TextBox.Text = "tesaegfaeggaeagegea";
             var vm = SimpleIoc.Default.GetInstance<MainViewModel>();
             this.DataContext = vm;
         }

@@ -17,21 +17,24 @@ using System.Text.RegularExpressions;
 
 namespace LSPDApplication.ViewModel
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : ViewModelBase, INotifyPropertyChanged
     {
         public MainViewModel()
         {
             this.SearchForHTMLFilesCommand = new RelayCommand(this.ChooseFolder);
             this.ExportCommand = new RelayCommand(this.ExportData);
+            this.FilterDataCommand = new RelayCommand(this.FilterData);
         }
+        
         #region ICommands
         public ICommand SearchForHTMLFilesCommand { get; set; }
         public ICommand ExportCommand { get; set; }
+        public ICommand FilterDataCommand { get; set; }
+
         #endregion
 
         #region Fields
         public string sourceOfHTMLFiles { get; set; }
-        public string labelkurwa { get; set; }
         public List<Officer> WorkersData { get; set; }
         #endregion
 
@@ -52,7 +55,7 @@ namespace LSPDApplication.ViewModel
             var htmlFilesList = GetFilesFromDirectory();
             List<Officer> officersList = GetOfficersList(htmlFilesList);
 
-            this.WorkersData = officersList;
+            this.WorkersData = officersList.OrderBy(x=>x.workerNick).ToList();
             this.OnPropertyChanged("WorkersData");
         }
 
@@ -66,11 +69,8 @@ namespace LSPDApplication.ViewModel
                 return new string[] { };
             }
             var extractPath = Path.GetFullPath(fbd.SelectedPath);
-            this.labelkurwa = Path.GetFullPath(fbd.SelectedPath);
-            this.labelkurwa = "Test kurwa jebana raltez to cwel";
             this.sourceOfHTMLFiles = extractPath;
             this.OnPropertyChanged("sourceOfHTMLFiles");
-            this.OnPropertyChanged("labelkurwa");
 
             var htmlFilesList = Directory.GetFiles(extractPath);
             return htmlFilesList;
@@ -173,6 +173,11 @@ namespace LSPDApplication.ViewModel
             return contents;
         }
 
+
+        private void FilterData()
+        {
+            throw new NotImplementedException();
+        }
 
         private void ExportData()
         {
