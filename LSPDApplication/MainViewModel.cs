@@ -25,7 +25,7 @@ namespace LSPDApplication.ViewModel
             this.ExportCommand = new RelayCommand(this.ExportData);
             this.FilterDataCommand = new RelayCommand(this.FilterData);
         }
-        
+
         #region ICommands
         public ICommand SearchForHTMLFilesCommand { get; set; }
         public ICommand ExportCommand { get; set; }
@@ -55,7 +55,7 @@ namespace LSPDApplication.ViewModel
             var htmlFilesList = GetFilesFromDirectory();
             List<Officer> officersList = GetOfficersList(htmlFilesList);
 
-            this.WorkersData = officersList.OrderBy(x=>x.workerNick).ToList();
+            this.WorkersData = officersList.OrderBy(x => x.workerNick).ToList();
             this.OnPropertyChanged("WorkersData");
         }
 
@@ -106,6 +106,7 @@ namespace LSPDApplication.ViewModel
                 officer.workerPayday = Int32.Parse(mPayday.Groups[1].Value);
                 officer.workerSkin = Int32.Parse(mSkin.Groups[1].Value);
                 officer.workerDutyList = this.GetWorkerDutyList(htmlString);
+                officer.workerDutyTime = this.GetWorkerDutyTime(officer.workerDutyList);
             }
             return officer;
         }
@@ -130,17 +131,20 @@ namespace LSPDApplication.ViewModel
                 }
                 List<string> tdContents = GetContents(trContent, td_pattern);
                 Duty dutyStats = new Duty();
-                string[] start = tdContents.ElementAt(0).Split(' ');
-                dutyStats.StartDate = Regex.Replace(start[0], "<td>", "");
-                dutyStats.StartTime = Regex.Replace(start[1], "</td>", "");
+                
+                dutyStats.StartTime = HtmlToDateTimeReplace(tdContents.ElementAt(0));
+                if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > 2 && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < 9)
+                {
+                    dutyStats.StartTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 9, 0, 0);
+                }
+                
+                dutyStats.EndTime = HtmlToDateTimeReplace(tdContents.ElementAt(1));
+                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9)
+                {
+                    dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 2, 0, 0);
+                }
 
-                string[] end = tdContents.ElementAt(1).Split(' ');
-                dutyStats.EndDate = Regex.Replace(end[0], "<td>", "");
-                dutyStats.EndTime = Regex.Replace(end[1], "</td>", "");
-
-                dutyStats.Duration = Regex.Replace(tdContents.ElementAt(2), "<td>", "");
-                dutyStats.Duration = Regex.Replace(dutyStats.Duration, " </td>", "");
-
+                dutyStats.Duration = dutyStats.EndTime.Subtract(dutyStats.StartTime);
                 workerDutyList.Add(dutyStats);
             }
             return workerDutyList;
@@ -173,6 +177,52 @@ namespace LSPDApplication.ViewModel
             return contents;
         }
 
+        private DateTime HtmlToDateTimeReplace(string element)
+        {
+            string result = Regex.Replace(element, "<td>", "");
+            result = Regex.Replace(result, "</td>", "");
+
+            return DateTime.Parse(result);
+        }
+
+        private TimeSpan GetWorkerDutyTime(List<Duty> workerDutyList)
+        {
+            TimeSpan workerDutyTime = new TimeSpan();
+            foreach (var v in workerDutyList)
+            {
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)))
+                {
+                    continue;
+                }
+
+                if (v.Duration.Ticks > 0)
+                {
+                    workerDutyTime += v.Duration;
+                }
+            }
+            return workerDutyTime;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         private void FilterData()
         {

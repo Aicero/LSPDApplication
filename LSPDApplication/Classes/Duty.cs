@@ -8,12 +8,8 @@ namespace LSPDApplication.Classes
 {
     public class Duty
     {
-        public string StartDate { get; set; }
-        public string StartTime { get; set; }
-
-        public string EndDate { get; set; }
-        public string EndTime { get; set; }
-
-        public string Duration { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public TimeSpan Duration { get; set; }
     }
 }

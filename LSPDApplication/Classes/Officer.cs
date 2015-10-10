@@ -12,9 +12,10 @@ namespace LSPDApplication.Classes
         public string workerRank { get; set; }
         public int workerPayday { get; set; }
         public int workerSkin { get; set; }
-        public TimeSpan workerDutyTime { get; set; }
-        public int workerHappyHours { get; set; }
 
         public List<Duty> workerDutyList { get; set; }
+
+        public TimeSpan workerDutyTime { get; set; }
+        public int workerHappyHours { get; set; }
     }
 }
