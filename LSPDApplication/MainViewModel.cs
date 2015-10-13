@@ -107,8 +107,67 @@ namespace LSPDApplication.ViewModel
                 officer.workerSkin = Int32.Parse(mSkin.Groups[1].Value);
                 officer.workerDutyList = this.GetWorkerDutyList(htmlString);
                 officer.workerDutyTime = this.GetWorkerDutyTime(officer.workerDutyList);
+                if (officer.workerDutyTime.Hours < 7 )
+                {
+                    officer.workerHappyHours = 0;
+                    officer.workerWarn = true;
+                }
+                if (officer.workerDutyTime.Hours >= 7 || officer.workerRank == "Sergeant II")
+                {
+                    officer.workerHappyHours = this.GetWorkerHappyHours(officer.workerDutyList);
+                    officer.workerWarn = false;
+                }
+                officer.workerHappyHoursMoney = officer.workerHappyHours * 500;
             }
             return officer;
+        }
+
+        private int GetWorkerHappyHours(List<Duty> workerDutyList)
+        {
+            TimeSpan workerHappyHours = new TimeSpan();
+            foreach (var v in workerDutyList)
+            {
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) || (v.StartTime.Hour >= 23 || v.EndTime.Hour < 20) && v.EndTime.Day == v.StartTime.Day)
+                {
+                    continue;
+                }
+
+                DateTime start = new DateTime();
+                DateTime end = new DateTime();
+
+                if (v.EndTime.Hour < 23)
+                {
+                    end = v.EndTime;
+                    if (v.StartTime.Hour < 20)
+                    {
+                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 20, 0, 0);
+                    }
+                    if (v.StartTime.Hour >= 20)
+                    {
+                        start = v.StartTime;
+                    }
+                    if (v.EndTime.Day > v.StartTime.Day)
+                    {
+                        end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 23, 0, 0);
+                    }
+                }
+                if (v.EndTime.Hour >= 23)
+                {
+                    end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 23, 0, 0);
+                    if (v.StartTime.Hour < 20)
+                    {
+                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 20, 0, 0);
+                    }
+
+                    if (v.StartTime.Hour >= 20)
+                    {
+                        start = v.StartTime;
+                    }
+                }
+                workerHappyHours += end.Subtract(start);
+            }
+            return workerHappyHours.Hours;
+            //return workerHappyHours;
         }
 
         private List<Duty> GetWorkerDutyList(string htmlString)
@@ -131,20 +190,21 @@ namespace LSPDApplication.ViewModel
                 }
                 List<string> tdContents = GetContents(trContent, td_pattern);
                 Duty dutyStats = new Duty();
-                
+
                 dutyStats.StartTime = HtmlToDateTimeReplace(tdContents.ElementAt(0));
                 if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > 2 && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < 9)
                 {
-                    dutyStats.StartTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 9, 0, 0);
+                    dutyStats.StartTime = new DateTime(dutyStats.StartTime.Year, dutyStats.StartTime.Month, dutyStats.StartTime.Day, 9, 0, 0);
                 }
-                
+
                 dutyStats.EndTime = HtmlToDateTimeReplace(tdContents.ElementAt(1));
-                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9)
+                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) > 2)
                 {
                     dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 2, 0, 0);
                 }
 
                 dutyStats.Duration = dutyStats.EndTime.Subtract(dutyStats.StartTime);
+
                 workerDutyList.Add(dutyStats);
             }
             return workerDutyList;
@@ -222,7 +282,7 @@ namespace LSPDApplication.ViewModel
 
 
 
-        
+
 
         private void FilterData()
         {
