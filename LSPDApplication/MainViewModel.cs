@@ -192,15 +192,15 @@ namespace LSPDApplication.ViewModel
                 Duty dutyStats = new Duty();
 
                 dutyStats.StartTime = HtmlToDateTimeReplace(tdContents.ElementAt(0));
-                if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > 2 && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < 9)
+                if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > 1 && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < 10)
                 {
-                    dutyStats.StartTime = new DateTime(dutyStats.StartTime.Year, dutyStats.StartTime.Month, dutyStats.StartTime.Day, 9, 0, 0);
+                    dutyStats.StartTime = new DateTime(dutyStats.StartTime.Year, dutyStats.StartTime.Month, dutyStats.StartTime.Day, 10, 0, 0);
                 }
 
                 dutyStats.EndTime = HtmlToDateTimeReplace(tdContents.ElementAt(1));
-                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 9 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) > 2)
+                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 10 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) > 1)
                 {
-                    dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 2, 0, 0);
+                    dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 1, 0, 0);
                 }
 
                 dutyStats.Duration = dutyStats.EndTime.Subtract(dutyStats.StartTime);
