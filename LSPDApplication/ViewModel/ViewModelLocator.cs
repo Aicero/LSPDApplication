@@ -43,16 +43,19 @@ namespace LSPDApplication.ViewModel
             ////}
 
             SimpleIoc.Default.Register<MainViewModel>();
+            SimpleIoc.Default.Register<OfficerDetailsWindowViewModel>();
         }
 
         public MainViewModel Main
         {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<MainViewModel>();
-            }
+            get { return ServiceLocator.Current.GetInstance<MainViewModel>(); }
         }
-        
+
+        public OfficerDetailsWindowViewModel OfficerDetailsWindow
+        {
+            get { return ServiceLocator.Current.GetInstance<OfficerDetailsWindowViewModel>(); }
+        }
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

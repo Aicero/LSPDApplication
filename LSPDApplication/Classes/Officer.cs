@@ -19,6 +19,7 @@ namespace LSPDApplication.Classes
         public int workerHappyHours { get; set; }
         public int workerHappyHoursMoney { get; set; }
 
+        public bool workerAway { get; set; }
         public bool workerWarn { get; set; }
     }
 }

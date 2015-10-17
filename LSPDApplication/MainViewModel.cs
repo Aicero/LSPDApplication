@@ -14,6 +14,7 @@ using LSPDApplication.Classes;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace LSPDApplication.ViewModel
 {
@@ -24,18 +25,30 @@ namespace LSPDApplication.ViewModel
             this.SearchForHTMLFilesCommand = new RelayCommand(this.ChooseFolder);
             this.ExportCommand = new RelayCommand(this.ExportData);
             this.FilterDataCommand = new RelayCommand(this.FilterData);
+            this.ShowMoreInfoCommand = new RelayCommand(this.ShowDetails);
+            this.toDate = DateTime.Now;
+            this.OnPropertyChanged("toDate");
+            this.fromDate = DateTime.Now.AddDays(-7);
+            this.OnPropertyChanged("fromDate");
+            this.FlyoutVisibility = Visibility.Collapsed;
+            this.OnPropertyChanged("FlyoutVisibility");
         }
 
         #region ICommands
         public ICommand SearchForHTMLFilesCommand { get; set; }
         public ICommand ExportCommand { get; set; }
         public ICommand FilterDataCommand { get; set; }
+        public ICommand ShowMoreInfoCommand { get; set; }
 
         #endregion
 
         #region Fields
         public string sourceOfHTMLFiles { get; set; }
         public List<Officer> WorkersData { get; set; }
+        public DateTime fromDate { get; set; }
+        public DateTime toDate { get; set; }
+        public Visibility FlyoutVisibility{ get; set; }
+
         #endregion
 
         #region INotifyPropertyChanged Members
@@ -107,10 +120,18 @@ namespace LSPDApplication.ViewModel
                 officer.workerSkin = Int32.Parse(mSkin.Groups[1].Value);
                 officer.workerDutyList = this.GetWorkerDutyList(htmlString);
                 officer.workerDutyTime = this.GetWorkerDutyTime(officer.workerDutyList);
-                if (officer.workerDutyTime.Hours < 7 )
+                officer.workerAway = false;
+                if (officer.workerDutyTime.Hours < 7)
                 {
                     officer.workerHappyHours = 0;
-                    officer.workerWarn = true;
+                    if (officer.workerAway == true)
+                    {
+                        officer.workerWarn = false;
+                    }
+                    else
+                    {
+                        officer.workerWarn = true;
+                    }
                 }
                 if (officer.workerDutyTime.Hours >= 7 || officer.workerRank == "Sergeant II")
                 {
@@ -127,7 +148,7 @@ namespace LSPDApplication.ViewModel
             TimeSpan workerHappyHours = new TimeSpan();
             foreach (var v in workerDutyList)
             {
-                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) || (v.StartTime.Hour >= 23 || v.EndTime.Hour < 20) && v.EndTime.Day == v.StartTime.Day)
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) /*|| (v.StartTime.Hour >= 23 || v.EndTime.Hour < 20) && v.EndTime.Day == v.StartTime.Day*/)
                 {
                     continue;
                 }
@@ -250,7 +271,7 @@ namespace LSPDApplication.ViewModel
             TimeSpan workerDutyTime = new TimeSpan();
             foreach (var v in workerDutyList)
             {
-                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)))
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) || v.EndTime.Day < fromDate.Day || v.EndTime.Day > toDate.Day)
                 {
                     continue;
                 }
@@ -279,8 +300,12 @@ namespace LSPDApplication.ViewModel
 
 
 
+        private void ShowDetails()
+        {
 
+        }
 
+        
 
 
 
