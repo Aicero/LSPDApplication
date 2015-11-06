@@ -11,12 +11,11 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}" >
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition />
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="2" Margin="10,20,10,0" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" HorizontalContentAlignment="Center" Style="{StaticResource AzureDataGrid}">
+        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="0" Margin="10,20,10,0" AutoGenerateColumns="False" IsReadOnly="False" GridLinesVisibility="All" HorizontalContentAlignment="Center" Style="{StaticResource AzureDataGrid}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Nick" Binding="{Binding workerNick}"/>
                 <DataGridTextColumn Header="Rank" Binding="{Binding workerRank}"/>
@@ -25,9 +24,11 @@
                 <DataGridTextColumn Header="Duty time" Binding="{Binding workerDutyTime}"/>
                 <DataGridTextColumn Header="HH" Binding="{Binding workerHappyHours}"/>
                 <DataGridTextColumn Header="HH money" Binding="{Binding workerHappyHoursMoney}"/>
-                <DataGridCheckBoxColumn ElementStyle="{DynamicResource MetroDataGridCheckBox}" EditingElementStyle="{DynamicResource MetroDataGridCheckBox}" Header="Away" Binding="{Binding workerAway}"/>
+                <DataGridTextColumn Header="Away" Binding="{Binding workerAway}"/>
                 <DataGridCheckBoxColumn ElementStyle="{DynamicResource MetroDataGridCheckBox}" EditingElementStyle="{DynamicResource MetroDataGridCheckBox}" Header="Warn" Binding="{Binding workerWarn}"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <Button Content="save data" Grid.Row="1" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding SaveDataCommand}"/>
     </Grid>
 </Controls:MetroWindow>

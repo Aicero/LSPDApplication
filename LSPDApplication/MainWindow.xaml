@@ -22,27 +22,29 @@
             <TextBox x:Name="TextBox" Text="{Binding Path=sourceOfHTMLFiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10" VerticalAlignment="Center" Width="580" IsEnabled="False" />
         </StackPanel>
 
-        <Button Content="Export" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ExportCommand}"/>
-
+        <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Right">
+            <Button Content="Import" VerticalContentAlignment="Center" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ImportCommand}"/>
+            <Button Content="Export" VerticalContentAlignment="Center" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ExportCommand}"/>
+        </StackPanel>
         <StackPanel Orientation="Horizontal" Grid.Row="1">
             <Label Content="Filter from:" FontSize="17" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <DatePicker Text="Data od" FontSize="17" SelectedDate="{Binding fromDate}" VerticalAlignment="Center" Width="180" Margin="10,0,0,0"/>
             <Label Content="Filter to:" FontSize="17" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <DatePicker Text="Data do" FontSize="17" SelectedDate="{Binding toDate}" VerticalAlignment="Center" Width="180" Margin="10,0,20,0"/>
-            <Button Content="process data" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding FilterDataCommand}"/>
+            <Button Content="process data" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ProcessDataCommand}"/>
         </StackPanel>
-        <Button Content="view more info" Grid.Row="1" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ShowMoreInfoCommand}"/>
+        <Button Content="show more info" Grid.Row="1" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="Auto" Height="Auto" FontSize="20" Margin="10" Style="{StaticResource SquareButtonStyle}" Command="{Binding ShowMoreInfoCommand}"/>
 
-        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="2" Margin="10,20,10,0" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" HorizontalContentAlignment="Center" Style="{StaticResource AzureDataGrid}">
+        <DataGrid ItemsSource="{Binding WorkersData}" Grid.Row="2" Margin="10,20,10,0" AutoGenerateColumns="False" IsReadOnly="true" GridLinesVisibility="All" HorizontalContentAlignment="Center" Style="{StaticResource AzureDataGrid}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Nick" Binding="{Binding workerNick}"/>
                 <DataGridTextColumn Header="Rank" Binding="{Binding workerRank}"/>
                 <DataGridTextColumn Header="Payday" Binding="{Binding workerPayday}"/>
                 <DataGridTextColumn Header="Skin" Binding="{Binding workerSkin}"/>
                 <DataGridTextColumn Header="Duty time" Binding="{Binding workerDutyTime}"/>
-                <DataGridTextColumn Header="HH" Binding="{Binding workerHappyHours}"/>
-                <DataGridTextColumn Header="HH money" Binding="{Binding workerHappyHoursMoney}"/>
-                <DataGridCheckBoxColumn ElementStyle="{DynamicResource MetroDataGridCheckBox}" EditingElementStyle="{DynamicResource MetroDataGridCheckBox}" Header="Away" Binding="{Binding workerAway}"/>
+                <DataGridTextColumn Header="Days Away" Binding="{Binding workerAway}"/>
+                <!--<DataGridTextColumn Header="HH" Binding="{Binding workerHappyHours}"/>-->
+                <DataGridTextColumn Header="Happy Hours" Binding="{Binding workerHappyHoursMoney}"/>
                 <DataGridCheckBoxColumn ElementStyle="{DynamicResource MetroDataGridCheckBox}" EditingElementStyle="{DynamicResource MetroDataGridCheckBox}" Header="Warn" Binding="{Binding workerWarn}"/>
             </DataGrid.Columns>
         </DataGrid>

@@ -15,6 +15,7 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Xml.Serialization;
 
 namespace LSPDApplication.ViewModel
 {
@@ -22,12 +23,17 @@ namespace LSPDApplication.ViewModel
     {
         public OfficerDetailsWindowViewModel()
         {
+            this.SaveDataCommand = new RelayCommand(this.SaveData);
+            this.WorkersData = Deserialize();
+            this.OnPropertyChanged("WorkersData");
         }
 
         #region ICommands
+        public ICommand SaveDataCommand { get; set; }
         #endregion
 
         #region Fields
+        public List<Officer> WorkersData { get; set; }
         #endregion
 
         #region INotifyPropertyChanged Members
@@ -42,7 +48,35 @@ namespace LSPDApplication.ViewModel
         }
         #endregion
 
-        
+        private void SaveData()
+        {
+            Serialize(this.WorkersData);
+        }
 
+        #region serialization
+        public static void Serialize(List<Officer> workersData)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<Officer>));
+            using (TextWriter writer = new StreamWriter("LSPDofficerslist.xml"))
+            {
+                serializer.Serialize(writer, workersData);
+                writer.Close();
+            }
+        }
+
+        public static List<Officer> Deserialize()
+        {
+            List<Officer> deserialized = new List<Officer>();
+            if (File.Exists("LSPDofficerslist.xml"))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Officer>));
+                using (StreamReader reader = new StreamReader("LSPDofficerslist.xml"))
+                {
+                    deserialized = (List<Officer>)serializer.Deserialize(reader);
+                }
+            }
+            return deserialized;
+        }
+        #endregion
     }
 }

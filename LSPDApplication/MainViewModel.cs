@@ -15,6 +15,7 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Xml.Serialization;
 
 namespace LSPDApplication.ViewModel
 {
@@ -23,10 +24,11 @@ namespace LSPDApplication.ViewModel
         public MainViewModel()
         {
             this.SearchForHTMLFilesCommand = new RelayCommand(this.ChooseFolder);
+            this.ImportCommand = new RelayCommand(this.ImportData);
             this.ExportCommand = new RelayCommand(this.ExportData);
-            this.FilterDataCommand = new RelayCommand(this.FilterData);
+            this.ProcessDataCommand = new RelayCommand(this.ProcessData);
             this.ShowMoreInfoCommand = new RelayCommand(this.ShowDetails);
-            this.toDate = DateTime.Now;
+            this.toDate = DateTime.Now.AddDays(-1);
             this.OnPropertyChanged("toDate");
             this.fromDate = DateTime.Now.AddDays(-7);
             this.OnPropertyChanged("fromDate");
@@ -34,8 +36,9 @@ namespace LSPDApplication.ViewModel
 
         #region ICommands
         public ICommand SearchForHTMLFilesCommand { get; set; }
+        public ICommand ImportCommand { get; set; }
         public ICommand ExportCommand { get; set; }
-        public ICommand FilterDataCommand { get; set; }
+        public ICommand ProcessDataCommand { get; set; }
         public ICommand ShowMoreInfoCommand { get; set; }
 
         #endregion
@@ -45,6 +48,12 @@ namespace LSPDApplication.ViewModel
         public List<Officer> WorkersData { get; set; }
         public DateTime fromDate { get; set; }
         public DateTime toDate { get; set; }
+
+        private int maxEndOfDutyHour = 1;
+        private int minStartOfDutyHour = 10;
+        private int happyHourStart = 20;
+        private int happyHourEnd = 23;
+        private int mphh = 500;
 
         #endregion
 
@@ -66,6 +75,7 @@ namespace LSPDApplication.ViewModel
             List<Officer> officersList = GetOfficersList(htmlFilesList);
 
             this.WorkersData = officersList.OrderBy(x => x.workerNick).ToList();
+            Serialize(this.WorkersData);
             this.OnPropertyChanged("WorkersData");
         }
 
@@ -116,76 +126,13 @@ namespace LSPDApplication.ViewModel
                 officer.workerPayday = Int32.Parse(mPayday.Groups[1].Value);
                 officer.workerSkin = Int32.Parse(mSkin.Groups[1].Value);
                 officer.workerDutyList = this.GetWorkerDutyList(htmlString);
-                officer.workerDutyTime = this.GetWorkerDutyTime(officer.workerDutyList);
-                officer.workerAway = false;
-                if (officer.workerDutyTime.Hours < 7)
-                {
-                    officer.workerHappyHours = 0;
-                    if (officer.workerAway == true || officer.workerDutyTime.Days >= 1)
-                    {
-                        officer.workerWarn = false;
-                    }
-                    else
-                    {
-                        officer.workerWarn = true;
-                    }
-                }
-                if (officer.workerDutyTime.Hours >= 7 || officer.workerDutyTime.Days >= 1 || officer.workerRank == "Sergeant II")
-                {
-                    officer.workerHappyHours = this.GetWorkerHappyHours(officer.workerDutyList);
-                    officer.workerWarn = false;
-                }
-                officer.workerHappyHoursMoney = officer.workerHappyHours * 500;
+                officer.workerDutyTime = "0";
+                officer.workerAway = 0;
+                officer.workerWarn = false;
+                officer.workerHappyHours = 0;
+                officer.workerHappyHoursMoney = 0;
             }
             return officer;
-        }
-
-        private int GetWorkerHappyHours(List<Duty> workerDutyList)
-        {
-            TimeSpan workerHappyHours = new TimeSpan();
-            foreach (var v in workerDutyList)
-            {
-                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) || (v.StartTime.Hour >= 23 || v.EndTime.Hour < 20) && v.EndTime.Day == v.StartTime.Day)
-                {
-                    continue;
-                }
-
-                DateTime start = new DateTime();
-                DateTime end = new DateTime();
-
-                if (v.EndTime.Hour < 23)
-                {
-                    end = v.EndTime;
-                    if (v.StartTime.Hour < 20)
-                    {
-                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 20, 0, 0);
-                    }
-                    if (v.StartTime.Hour >= 20)
-                    {
-                        start = v.StartTime;
-                    }
-                    if (v.EndTime.Day > v.StartTime.Day)
-                    {
-                        end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 23, 0, 0);
-                    }
-                }
-                if (v.EndTime.Hour >= 23)
-                {
-                    end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 23, 0, 0);
-                    if (v.StartTime.Hour < 20)
-                    {
-                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, 20, 0, 0);
-                    }
-
-                    if (v.StartTime.Hour >= 20)
-                    {
-                        start = v.StartTime;
-                    }
-                }
-                workerHappyHours += end.Subtract(start);
-            }
-            return workerHappyHours.Hours;
-            //return workerHappyHours;
         }
 
         private List<Duty> GetWorkerDutyList(string htmlString)
@@ -210,18 +157,18 @@ namespace LSPDApplication.ViewModel
                 Duty dutyStats = new Duty();
 
                 dutyStats.StartTime = HtmlToDateTimeReplace(tdContents.ElementAt(0));
-                if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > 1 && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < 10)
+                if (Int32.Parse(dutyStats.StartTime.Hour.ToString()) > maxEndOfDutyHour && Int32.Parse(dutyStats.StartTime.Hour.ToString()) < minStartOfDutyHour)
                 {
-                    dutyStats.StartTime = new DateTime(dutyStats.StartTime.Year, dutyStats.StartTime.Month, dutyStats.StartTime.Day, 10, 0, 0);
+                    dutyStats.StartTime = new DateTime(dutyStats.StartTime.Year, dutyStats.StartTime.Month, dutyStats.StartTime.Day, minStartOfDutyHour, 0, 0);
                 }
 
                 dutyStats.EndTime = HtmlToDateTimeReplace(tdContents.ElementAt(1));
-                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < 10 && Int32.Parse(dutyStats.EndTime.Hour.ToString()) > 1)
+                if (Int32.Parse(dutyStats.EndTime.Hour.ToString()) < minStartOfDutyHour && Int32.Parse(dutyStats.EndTime.Hour.ToString()) > maxEndOfDutyHour)
                 {
-                    dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, 1, 0, 0);
+                    dutyStats.EndTime = new DateTime(dutyStats.EndTime.Year, dutyStats.EndTime.Month, dutyStats.EndTime.Day, maxEndOfDutyHour, 0, 0);
                 }
 
-                dutyStats.Duration = dutyStats.EndTime.Subtract(dutyStats.StartTime);
+                dutyStats.Duration = dutyStats.EndTime.Subtract(dutyStats.StartTime).ToString();
 
                 workerDutyList.Add(dutyStats);
             }
@@ -263,57 +210,199 @@ namespace LSPDApplication.ViewModel
             return DateTime.Parse(result);
         }
 
-        private TimeSpan GetWorkerDutyTime(List<Duty> workerDutyList)
+        private void ProcessData()
+        {
+            List<Officer> officersList = WorkersData;
+            foreach (var officer in officersList)
+            {
+                officer.workerDutyTime = this.GetWorkerDutyTime(officer.workerDutyList);
+                TimeSpan workerDutyTime = TimeSpan.Parse(officer.workerDutyTime);
+                if (workerDutyTime.Hours < 7 - officer.workerAway && workerDutyTime.Days == 0)
+                {
+                    officer.workerHappyHours = 0;
+                    officer.workerWarn = true;
+                }
+                if (workerDutyTime.Hours >= 7 - officer.workerAway || workerDutyTime.Days != 0)
+                {
+                    officer.workerWarn = false;
+                    if (workerDutyTime.Hours >= 12 || workerDutyTime.Days != 0)
+                    {
+                        officer.workerHappyHours = this.GetWorkerHappyHours(officer.workerDutyList);
+                    }
+                }
+                officer.workerHappyHoursMoney = officer.workerHappyHours * mphh;
+            }
+            this.WorkersData = officersList.OrderBy(x => x.workerNick).ToList();
+            Serialize(this.WorkersData);
+            this.OnPropertyChanged("WorkersData");
+        }
+
+        private string GetWorkerDutyTime(List<Duty> workerDutyList)
         {
             TimeSpan workerDutyTime = new TimeSpan();
             foreach (var v in workerDutyList)
             {
-                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0))/* || v.EndTime.Day < fromDate.Day || v.EndTime.Day > toDate.Day*/)
+                TimeSpan duration = TimeSpan.Parse(v.Duration);
+                
+                if (v.StartTime < fromDate.Date && v.EndTime <= fromDate.Date) // zaczê³o siê i skoñczy³o przed fromDate
                 {
                     continue;
                 }
 
-                if (v.Duration.Ticks > 0)
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0))) // jeœli b³¹d z koñczeniem duty (crash lub wcia¿ na /duty)
                 {
-                    workerDutyTime += v.Duration;
+                    continue;
+                }
+
+                if (duration.Ticks > 0)
+                {
+                    if (v.StartTime < fromDate.Date && v.EndTime > fromDate.Date) // zaczê³o siê przed, skoñczy³o siê po fromDate
+                    {
+                        TimeSpan overtime = fromDate.Date.Subtract(v.StartTime);
+                        TimeSpan dutyDuration = duration.Subtract(overtime);
+
+                        workerDutyTime += dutyDuration; //dodawanie d³ugoœci duty
+                    }
+
+                    if (v.StartTime >= fromDate.Date && v.EndTime <= toDate.Date)
+                    {
+                        workerDutyTime += duration;
+                    }
+                    if (v.StartTime < toDate.Date && v.EndTime >= toDate.Date)
+                    {
+                        TimeSpan overtime = v.EndTime.Subtract(toDate.Date.AddDays(1));
+                        TimeSpan dutyDuration = duration.Subtract(overtime);
+                        workerDutyTime += dutyDuration;
+                    }
                 }
             }
-            return workerDutyTime;
+            return workerDutyTime.ToString();
         }
 
+        private int GetWorkerHappyHours(List<Duty> workerDutyList)
+        {
+            TimeSpan workerHappyHours = new TimeSpan();
+            foreach (var v in workerDutyList)
+            {
+                if (v.EndTime.Equals(new DateTime(1970, 1, 1, 0, 0, 0)) || (v.StartTime.Hour >= happyHourEnd || v.EndTime.Hour < happyHourStart) && v.EndTime.Day == v.StartTime.Day)
+                {
+                    continue;
+                }
 
+                DateTime start = new DateTime();
+                DateTime end = new DateTime();
 
+                if (v.EndTime.Hour < happyHourEnd)
+                {
+                    end = v.EndTime;
+                    if (v.StartTime.Hour < happyHourStart)
+                    {
+                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, happyHourStart, 0, 0);
+                    }
+                    if (v.StartTime.Hour >= happyHourStart)
+                    {
+                        start = v.StartTime;
+                    }
+                    if (v.EndTime.Day > v.StartTime.Day)
+                    {
+                        end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, happyHourEnd, 0, 0);
+                    }
+                }
+                if (v.EndTime.Hour >= happyHourEnd)
+                {
+                    end = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, happyHourEnd, 0, 0);
+                    if (v.StartTime.Hour < happyHourStart)
+                    {
+                        start = new DateTime(v.StartTime.Year, v.StartTime.Month, v.StartTime.Day, happyHourStart, 0, 0);
+                    }
 
-
-
-
-
-
-
-
-
-
-
-
+                    if (v.StartTime.Hour >= happyHourStart)
+                    {
+                        start = v.StartTime;
+                    }
+                }
+                workerHappyHours += end.Subtract(start);
+            }
+            return workerHappyHours.Hours;
+        }
 
 
         private void ShowDetails()
         {
-
+            OfficerDetailsWindow showDetailsWindow = new OfficerDetailsWindow();
+            showDetailsWindow.Show();
         }
 
-        
-
-
-
-        private void FilterData()
+        private void ImportData()
         {
-            throw new NotImplementedException();
+            List<Officer> deserialized = Deserialize();
+            this.WorkersData = deserialized.OrderBy(x => x.workerNick).ToList();
+            this.OnPropertyChanged("WorkersData");
         }
+
 
         private void ExportData()
         {
-            throw new NotImplementedException();
+            DateTime today = DateTime.Now.Date;
+            List<Officer> warnedOfficers = WorkersData.Where(o => o.workerWarn == true).OrderBy(o => o.workerNick).ToList();
+            List<Officer> mostDutyTimeBenefits = WorkersData.OrderByDescending(o => o.workerDutyTime).ToList();
+            List<Officer> happyHoursList = WorkersData.Where(o => o.workerHappyHours != 0).OrderBy(o => o.workerNick).ToList();
+            
+            StreamWriter writer = new StreamWriter("cpf.txt");
+            writer.WriteLine("[center]" + today + "[/center]");
+            writer.WriteLine();
+            writer.WriteLine("[b]1.[/b] Wyliczona ilosc /duty czlonkow frakcji:");
+            writer.WriteLine("[spoiler][img=][/spoiler]");
+            writer.WriteLine();
+            writer.WriteLine("[b]2.[/b] W zwiazku z niska aktywnoscia, ostrzezenia do akt otrzymuja:");
+            writer.Write("[indent=1]");
+            foreach (var officer in warnedOfficers)
+            {
+                writer.WriteLine(officer.workerNick);
+            }
+            writer.WriteLine("[/indent]");
+            writer.WriteLine();
+            writer.WriteLine("[b]3.[/b] Premie za najwyzsza aktywnosc w minionym tygodniu otrzymuja:");
+            writer.Write("[indent=1]");
+            for (int i = 0; i < 3; i++)
+            {
+                writer.WriteLine(mostDutyTimeBenefits[i].workerNick + " - ($" + (5 - i) + "000)");
+            }
+            writer.WriteLine("[/indent]");
+            writer.WriteLine();
+            writer.WriteLine("[b]4.[/b] Premie 'Happy Hours' za gre miêdzy godzina 20:00 a 23:00 otrzymuja:");
+            foreach (var officer in happyHoursList)
+            {
+                writer.WriteLine(officer.workerNick + " - ($" + officer.workerHappyHoursMoney + ")");
+            }
+            writer.WriteLine("[/indent]");
+            writer.Close();
         }
+
+        #region serialization
+        public static void Serialize(List<Officer> workersData)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<Officer>));
+            using (TextWriter writer = new StreamWriter("LSPDofficerslist.xml"))
+            {
+                serializer.Serialize(writer, workersData);
+                writer.Close();
+            }
+        }
+
+        public static List<Officer> Deserialize()
+        {
+            List<Officer> deserialized = new List<Officer>();
+            if (File.Exists("LSPDofficerslist.xml"))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Officer>));
+                using (StreamReader reader = new StreamReader("LSPDofficerslist.xml"))
+                {
+                    deserialized = (List<Officer>)serializer.Deserialize(reader);
+                }
+            }
+            return deserialized;
+        }
+        #endregion
     }
 }
